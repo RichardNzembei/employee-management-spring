@@ -24,22 +24,25 @@ export default function Dashboard() {
     { label: 'Monthly Payroll',   value: loading ? '—' : `KES ${totalSalary.toLocaleString()}`, sub: 'total compensation' },
   ];
 
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning.' : hour < 18 ? 'Good afternoon.' : 'Good evening.';
+
   return (
     <div style={{ padding: '48px 44px', maxWidth: '1060px' }} className="animate-fade-in">
 
-      {/* Header */}
+      
       <div style={{ marginBottom: '44px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#f0faf4', border: '1px solid #bbf7d0', borderRadius: '99px', padding: '4px 12px', marginBottom: '18px' }}>
           <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }} />
           <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 600, letterSpacing: '0.03em' }}>All systems operational</span>
         </div>
         <h1 style={{ fontWeight: 800, fontSize: '38px', letterSpacing: '-0.035em', color: '#0a0a0a', lineHeight: 1.1, marginBottom: '10px' }}>
-          Good morning.
+          {greeting}
         </h1>
         <p style={{ color: '#737373', fontSize: '15px' }}>Here's your team overview for today.</p>
       </div>
 
-      {/* Stats */}
+      
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '44px' }}>
         {stats.map(({ label, value, sub }) => (
           <div key={label} style={{
@@ -58,7 +61,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Quick Actions */}
+      
       <div>
         <div style={{ fontSize: '10px', fontWeight: 700, color: '#b0b0b0', letterSpacing: '0.09em', textTransform: 'uppercase', marginBottom: '14px' }}>
           Quick Actions
@@ -67,7 +70,7 @@ export default function Dashboard() {
           {[
             { href: '/employees',        icon: Users,    label: 'View All Employees', desc: 'Browse and manage the team'  },
             { href: '/employees/add',    icon: UserPlus, label: 'Add Employee',        desc: 'Onboard a new team member'  },
-            { href: '/employees/search', icon: Search,   label: 'Search by Email',     desc: 'Look up someone quickly'    },
+            { href: '/employees/search', icon: Search,   label: 'Search Employee',     desc: 'Look up someone quickly'    },
           ].map(({ href, icon: Icon, label, desc }) => (
             <Link key={href} href={href} style={{ textDecoration: 'none' }}>
               <div style={{

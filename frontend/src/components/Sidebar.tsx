@@ -19,7 +19,7 @@ export default function Sidebar() {
       borderRight: '1px solid #e8e8e8',
       display: 'flex', flexDirection: 'column', zIndex: 50,
     }}>
-      {/* Logo */}
+      
       <div style={{ padding: '22px 20px 18px', borderBottom: '1px solid #ebebeb' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
@@ -35,7 +35,7 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Nav */}
+      
       <nav style={{ padding: '14px 12px', flex: 1 }}>
         <div style={{ fontSize: '10px', fontWeight: 600, color: '#c0c0c0', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0 8px', marginBottom: '8px' }}>
           Menu
@@ -62,7 +62,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
+      
       <div style={{ padding: '16px 20px', borderTop: '1px solid #ebebeb' }}>
         <div style={{ fontSize: '10px', color: '#c0c0c0', fontFamily: 'var(--font-mono)', lineHeight: 1.8 }}>
          version 1

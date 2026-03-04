@@ -6,17 +6,49 @@ import { CreateEmployeeRequest } from '@/types/employee';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Save, User, Mail, Hash, DollarSign, Briefcase, Calendar } from 'lucide-react';
 import Link from 'next/link';
+import Modal from '@/components/Modal';
 
 const initial: CreateEmployeeRequest = {
   firstName: '', lastName: '', email: '', employmentNumber: '',
   salary: 0, position: 'JUNIOR_DEVELOPER', employmentDate: '',
 };
 
+interface FieldProps {
+  label: string;
+  name: string;
+  type?: string;
+  placeholder?: string;
+  icon: any;
+  value: string | number;
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  error?: string;
+}
+
+const Field = ({ label, name, type = 'text', placeholder, icon: Icon, value, onChange, error }: FieldProps) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+    <label style={{ fontSize: '11px', fontWeight: 600, color: '#737373', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+      {label}
+    </label>
+    <div style={{ position: 'relative' }}>
+      <Icon size={13} style={{ position: 'absolute', left: '11px', top: '50%', transform: 'translateY(-50%)', color: error ? 'var(--danger)' : '#c0c0c0', pointerEvents: 'none' }} />
+      <input className={`input${error ? ' error' : ''}`}
+        style={{ paddingLeft: '34px' }}
+        type={type} name={name}
+        value={String(value)}
+        onChange={onChange}
+        placeholder={placeholder}
+      />
+    </div>
+    {error && <span style={{ fontSize: '11px', color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '3px' }}>↑ {error}</span>}
+  </div>
+);
+
 export default function AddEmployeePage() {
   const router = useRouter();
   const [form, setForm]       = useState<CreateEmployeeRequest>(initial);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors]   = useState<Record<string, string>>({});
+  const [modalMessage, setModalMessage] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -42,8 +74,7 @@ export default function AddEmployeePage() {
     setLoading(true);
     try {
       await employeeApi.create(form);
-      toast.success('Employee added successfully');
-      router.push('/employees');
+      setModalMessage('Employee added successfully');
     } catch (err: any) {
       const data = err.response?.data;
       if (data?.validationErrors) setErrors(data.validationErrors);
@@ -55,31 +86,10 @@ export default function AddEmployeePage() {
     form.salary > 0 ? '1' : '', form.employmentDate].filter(Boolean).length;
   const pct = Math.round((filled / 6) * 100);
 
-  const Field = ({ label, name, type = 'text', placeholder, icon: Icon }: {
-    label: string; name: string; type?: string; placeholder?: string; icon: any;
-  }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-      <label style={{ fontSize: '11px', fontWeight: 600, color: '#737373', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-        {label}
-      </label>
-      <div style={{ position: 'relative' }}>
-        <Icon size={13} style={{ position: 'absolute', left: '11px', top: '50%', transform: 'translateY(-50%)', color: errors[name] ? 'var(--danger)' : '#c0c0c0', pointerEvents: 'none' }} />
-        <input className={`input${errors[name] ? ' error' : ''}`}
-          style={{ paddingLeft: '34px' }}
-          type={type} name={name}
-          value={String((form as any)[name])}
-          onChange={handleChange}
-          placeholder={placeholder}
-        />
-      </div>
-      {errors[name] && <span style={{ fontSize: '11px', color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '3px' }}>↑ {errors[name]}</span>}
-    </div>
-  );
-
   return (
     <div style={{ padding: '44px', maxWidth: '660px' }} className="animate-fade-in">
 
-      {/* Breadcrumb */}
+      
       <Link href="/employees" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', textDecoration: 'none', color: '#b0b0b0', fontSize: '12px', marginBottom: '22px', transition: 'color 0.15s' }}
         onMouseEnter={e => e.currentTarget.style.color = '#737373'}
         onMouseLeave={e => e.currentTarget.style.color = '#b0b0b0'}>
@@ -93,7 +103,7 @@ export default function AddEmployeePage() {
         Fill in the details below to add a new team member.
       </p>
 
-      {/* Progress bar */}
+      
       <div style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
           <span style={{ fontSize: '11px', color: '#b0b0b0' }}>Form completion</span>
@@ -108,33 +118,38 @@ export default function AddEmployeePage() {
         </div>
       </div>
 
-      {/* Form */}
+      
       <div style={{ background: '#fff', border: '1px solid #e8e8e8', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
 
-        {/* Personal */}
+        
         <div style={{ padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '18px' }}>
             <User size={12} color="#b0b0b0" />
             <span style={{ fontSize: '10px', fontWeight: 700, color: '#b0b0b0', textTransform: 'uppercase', letterSpacing: '0.09em' }}>Personal Information</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-            <Field label="First Name" name="firstName" placeholder="Jane"  icon={User} />
-            <Field label="Last Name"  name="lastName"  placeholder="Smith" icon={User} />
+            <Field label="First Name" name="firstName" placeholder="Jane" icon={User}
+              value={form.firstName} onChange={handleChange} error={errors.firstName} />
+            <Field label="Last Name" name="lastName" placeholder="Smith" icon={User}
+              value={form.lastName} onChange={handleChange} error={errors.lastName} />
           </div>
-          <Field label="Email Address" name="email" type="email" placeholder="jane@company.com" icon={Mail} />
+          <Field label="Email Address" name="email" type="email" placeholder="jane@company.com" icon={Mail}
+            value={form.email} onChange={handleChange} error={errors.email} />
         </div>
 
         <div style={{ height: '1px', background: '#f0f0f0' }} />
 
-        {/* Employment */}
+        
         <div style={{ padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '18px' }}>
             <Briefcase size={12} color="#b0b0b0" />
             <span style={{ fontSize: '10px', fontWeight: 700, color: '#b0b0b0', textTransform: 'uppercase', letterSpacing: '0.09em' }}>Employment Details</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-            <Field label="Employee No." name="employmentNumber" placeholder="EMP-001" icon={Hash}        />
-            <Field label="Salary (KES)" name="salary" type="number" placeholder="75000" icon={DollarSign} />
+            <Field label="Employee No." name="employmentNumber" placeholder="EMP-001" icon={Hash}
+              value={form.employmentNumber} onChange={handleChange} error={errors.employmentNumber} />
+            <Field label="Salary (KES)" name="salary" type="number" placeholder="75000" icon={DollarSign}
+              value={form.salary} onChange={handleChange} error={errors.salary} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -160,7 +175,7 @@ export default function AddEmployeePage() {
           </div>
         </div>
 
-        {/* Footer */}
+        
         <div style={{ padding: '16px 24px', borderTop: '1px solid #f0f0f0', background: '#fafafa', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button className="btn-primary" onClick={handleSubmit} disabled={loading}
             style={{ display: 'flex', alignItems: 'center', gap: '7px', minWidth: '148px', justifyContent: 'center', padding: '10px 20px' }}>
@@ -178,6 +193,9 @@ export default function AddEmployeePage() {
           )}
         </div>
       </div>
+      <Modal open={!!modalMessage} title="Success" onClose={() => { setModalMessage(null); router.push('/employees'); }}>
+        {modalMessage}
+      </Modal>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );

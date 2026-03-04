@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { employeeApi } from '@/lib/api';
 import { Employee } from '@/types/employee';
 import EmployeeCard from '@/components/EmployeeCard';
+import Modal from '@/components/Modal';
 import { Users, RefreshCw, Plus, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -14,11 +15,15 @@ export default function EmployeesPage() {
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [filter, setFilter]       = useState<Filter>('ALL');
+  const [modalMessage, setModalMessage] = useState<string | null>(null);
 
-  const fetch = async () => {
+  const fetch = async (showSuccess = false) => {
     setLoading(true);
-    try { setEmployees(await employeeApi.getAll()); }
-    catch { toast.error('Failed to load employees'); }
+    try {
+      const list = await employeeApi.getAll();
+      setEmployees(list);
+      if (showSuccess) setModalMessage('Employee list refreshed');
+    } catch { toast.error('Failed to load employees'); }
     finally { setLoading(false); }
   };
   useEffect(() => { fetch(); }, []);
@@ -38,7 +43,7 @@ export default function EmployeesPage() {
   return (
     <div style={{ padding: '44px' }} className="animate-fade-in">
 
-      {/* Header */}
+      
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' }}>
         <div>
           <h1 style={{ fontWeight: 800, fontSize: '28px', letterSpacing: '-0.025em', color: '#0a0a0a', marginBottom: '4px' }}>
@@ -49,7 +54,7 @@ export default function EmployeesPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn-ghost" onClick={fetch} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button className="btn-ghost" onClick={() => fetch()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <RefreshCw size={13} /> Refresh
           </button>
           <Link href="/employees/add" style={{ textDecoration: 'none' }}>
@@ -60,7 +65,7 @@ export default function EmployeesPage() {
         </div>
       </div>
 
-      {/* Toolbar */}
+      
       {!loading && employees.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', borderBottom: '1px solid #ebebeb', paddingBottom: '20px' }}>
           <div style={{ display: 'flex', gap: '0' }}>
@@ -86,7 +91,7 @@ export default function EmployeesPage() {
         </div>
       )}
 
-      {/* Content */}
+      
       {loading ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#b0b0b0', padding: '64px 0' }}>
           <span style={{ width: '15px', height: '15px', border: '2px solid #e0e0e0', borderTopColor: '#1e2d40', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.65s linear infinite' }} />
@@ -123,6 +128,9 @@ export default function EmployeesPage() {
           ))}
         </div>
       )}
+      <Modal open={!!modalMessage} title="Success" onClose={() => setModalMessage(null)}>
+        {modalMessage}
+      </Modal>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );

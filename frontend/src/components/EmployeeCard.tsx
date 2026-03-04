@@ -4,6 +4,7 @@ import { Employee, POSITION_LABELS } from '@/types/employee';
 import { employeeApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Trash2, Pencil, X, Check, Calendar, DollarSign, Hash } from 'lucide-react';
+import Modal from './Modal';
 import { format } from 'date-fns';
 
 interface Props {
@@ -18,23 +19,27 @@ export default function EmployeeCard({ employee, onDeleted, onUpdated }: Props) 
   const [lastName,  setLastName]  = useState(employee.lastName);
   const [loading,   setLoading]   = useState(false);
   const [deleting,  setDeleting]  = useState(false);
+  const [modalMessage, setModalMessage] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim()) { toast.error('Name cannot be empty'); return; }
     setLoading(true);
     try {
       const updated = await employeeApi.updateName(employee.email, { firstName, lastName });
-      onUpdated(updated); setEditing(false); toast.success('Name updated');
+      onUpdated(updated);
+      setEditing(false);
+      setModalMessage('Name updated');
     } catch { toast.error('Failed to update'); }
     finally { setLoading(false); }
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Remove ${employee.firstName} ${employee.lastName}?`)) return;
+    setConfirmingDelete(false);
     setDeleting(true);
     try {
       await employeeApi.delete(employee.email);
-      onDeleted(employee.email); toast.success('Employee removed');
+      setModalMessage('Employee removed');
     } catch { toast.error('Failed to delete'); }
     finally { setDeleting(false); }
   };
@@ -50,10 +55,10 @@ export default function EmployeeCard({ employee, onDeleted, onUpdated }: Props) 
       onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-bright)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.4)'; }}
       onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-mid)'; e.currentTarget.style.boxShadow = 'none'; }}
     >
-      {/* Top row */}
+      
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Avatar */}
+          
           <div style={{
             width: '38px', height: '38px', borderRadius: '9px',
             background: isSenior ? 'rgba(34,197,94,0.08)' : 'rgba(255,255,255,0.06)',
@@ -86,7 +91,7 @@ export default function EmployeeCard({ employee, onDeleted, onUpdated }: Props) 
         </span>
       </div>
 
-      {/* Meta row */}
+      
       <div style={{ display: 'flex', gap: '16px', marginBottom: '16px', padding: '10px 0', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
         {[
           { icon: Hash,        text: employee.employmentNumber, mono: true },
@@ -100,7 +105,7 @@ export default function EmployeeCard({ employee, onDeleted, onUpdated }: Props) 
         ))}
       </div>
 
-      {/* Actions */}
+      
       <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
         {editing ? (
           <>
@@ -119,12 +124,23 @@ export default function EmployeeCard({ employee, onDeleted, onUpdated }: Props) 
               style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
               <Pencil size={12} /> Edit
             </button>
-            <button className="btn-danger" onClick={handleDelete} disabled={deleting}
+            <button className="btn-danger" onClick={() => setConfirmingDelete(true)} disabled={deleting}
               style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
               <Trash2 size={12} /> {deleting ? '…' : 'Delete'}
             </button>
           </>
         )}
+      <Modal open={!!modalMessage} title="Success" onClose={() => {
+        if (modalMessage === 'Employee removed') onDeleted(employee.email);
+        setModalMessage(null);
+      }}>
+        {modalMessage}
+      </Modal>
+
+      <Modal open={confirmingDelete} title="Confirm delete" onClose={() => setConfirmingDelete(false)}
+        onConfirm={handleDelete} confirmText="Delete" cancelText="Cancel">
+        Remove {employee.firstName} {employee.lastName}?
+      </Modal>
       </div>
     </div>
   );
