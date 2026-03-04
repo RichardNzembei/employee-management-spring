@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { employeeApi } from '@/lib/api';
 import { Employee, POSITION_LABELS } from '@/types/employee';
+import { useEmployees } from '@/hooks/useEmployees';
 import toast from 'react-hot-toast';
 import { Search, Calendar, DollarSign, Hash, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
@@ -10,35 +10,31 @@ export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<Employee | null>(null);
   const [notFound, setNotFound] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { data, isLoading: loading } = useEmployees();
+  const employees: Employee[] = (data ?? []) as Employee[];
 
-  const handleSearch = async () => {
+  const handleSearch = () => {
     const qRaw = query.trim();
     if (!qRaw) { toast.error('Enter a name, email, employee id, or gmail'); return; }
-    setLoading(true); setResult(null); setNotFound(false);
-    try {
-      const list = await employeeApi.getAll();
-      const q = qRaw.toLowerCase();
+    setResult(null); setNotFound(false);
+    const q = qRaw.toLowerCase();
 
-      const matches = list.filter(e => {
-        const fullName = `${e.firstName} ${e.lastName}`.toLowerCase();
-        if (fullName.includes(q)) return true;
-        if (e.email.toLowerCase().includes(q)) return true;
-        if (e.employmentNumber && e.employmentNumber.toLowerCase().includes(q)) return true;
-        if (POSITION_LABELS[e.position].toLowerCase().includes(q) || e.position.toLowerCase().includes(q)) return true;
-        if ((q === 'gmail' || q === 'gmail.com') && e.email.toLowerCase().endsWith('@gmail.com')) return true;
-        return false;
-      });
+    const matches = employees.filter(e => {
+      const fullName = `${e.firstName} ${e.lastName}`.toLowerCase();
+      if (fullName.includes(q)) return true;
+      if (e.email.toLowerCase().includes(q)) return true;
+      if (e.employmentNumber && e.employmentNumber.toLowerCase().includes(q)) return true;
+      if (POSITION_LABELS[e.position].toLowerCase().includes(q) || e.position.toLowerCase().includes(q)) return true;
+      if ((q === 'gmail' || q === 'gmail.com') && e.email.toLowerCase().endsWith('@gmail.com')) return true;
+      return false;
+    });
 
-      if (matches.length === 0) setNotFound(true);
-      else if (matches.length === 1) setResult(matches[0]);
-      else {
-        setResult(matches[0]);
-        toast(`Found ${matches.length} results — showing first`);
-      }
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Search failed');
-    } finally { setLoading(false); }
+    if (matches.length === 0) setNotFound(true);
+    else if (matches.length === 1) setResult(matches[0]);
+    else {
+      setResult(matches[0]);
+      toast(`Found ${matches.length} results — showing first`);
+    }
   };
 
   return (

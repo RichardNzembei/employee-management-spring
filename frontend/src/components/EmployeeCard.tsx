@@ -9,11 +9,12 @@ import { format } from 'date-fns';
 
 interface Props {
   employee: Employee;
-  onDeleted: (email: string) => void;
-  onUpdated: (updated: Employee) => void;
 }
 
-export default function EmployeeCard({ employee, onDeleted, onUpdated }: Props) {
+import { useQueryClient } from '@tanstack/react-query';
+
+export default function EmployeeCard({ employee }: Props) {
+  const queryClient = useQueryClient();
   const [editing,   setEditing]   = useState(false);
   const [firstName, setFirstName] = useState(employee.firstName);
   const [lastName,  setLastName]  = useState(employee.lastName);
@@ -27,7 +28,7 @@ export default function EmployeeCard({ employee, onDeleted, onUpdated }: Props) 
     setLoading(true);
     try {
       const updated = await employeeApi.updateName(employee.email, { firstName, lastName });
-      onUpdated(updated);
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
       setEditing(false);
       setModalMessage('Name updated');
     } catch { toast.error('Failed to update'); }
@@ -39,6 +40,7 @@ export default function EmployeeCard({ employee, onDeleted, onUpdated }: Props) 
     setDeleting(true);
     try {
       await employeeApi.delete(employee.email);
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
       setModalMessage('Employee removed');
     } catch { toast.error('Failed to delete'); }
     finally { setDeleting(false); }
@@ -130,10 +132,7 @@ export default function EmployeeCard({ employee, onDeleted, onUpdated }: Props) 
             </button>
           </>
         )}
-      <Modal open={!!modalMessage} title="Success" onClose={() => {
-        if (modalMessage === 'Employee removed') onDeleted(employee.email);
-        setModalMessage(null);
-      }}>
+      <Modal open={!!modalMessage} title="Success" onClose={() => { setModalMessage(null); }}>
         {modalMessage}
       </Modal>
 

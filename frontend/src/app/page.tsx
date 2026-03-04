@@ -39,7 +39,7 @@ export default function Dashboard() {
         <h1 style={{ fontWeight: 800, fontSize: '38px', letterSpacing: '-0.035em', color: '#0a0a0a', lineHeight: 1.1, marginBottom: '10px' }}>
           {greeting}
         </h1>
-        <p style={{ color: '#737373', fontSize: '15px' }}>Here's your team overview for today.</p>
+        <p style={{ color: '#737373', fontSize: '15px' }}>Here&apos;s your team overview for today.</p>
       </div>
 
       

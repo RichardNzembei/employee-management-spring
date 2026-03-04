@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Employee, CreateEmployeeRequest, UpdateNameRequest } from '@/types/employee';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8081/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
   headers: { 'Content-Type': 'application/json' },
 });
 

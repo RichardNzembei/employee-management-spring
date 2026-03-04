@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { employeeApi } from '@/lib/api';
+import { useState } from 'react';
 import { Employee } from '@/types/employee';
+import { useEmployees } from '@/hooks/useEmployees';
 import EmployeeCard from '@/components/EmployeeCard';
 import Modal from '@/components/Modal';
 import { Users, RefreshCw, Plus, Search } from 'lucide-react';
@@ -11,22 +11,21 @@ import Link from 'next/link';
 type Filter = 'ALL' | 'JUNIOR_DEVELOPER' | 'SENIOR_DEVELOPER';
 
 export default function EmployeesPage() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [filter, setFilter]       = useState<Filter>('ALL');
   const [modalMessage, setModalMessage] = useState<string | null>(null);
 
-  const fetch = async (showSuccess = false) => {
-    setLoading(true);
+  const { data, isLoading: loading, refetch } = useEmployees();
+  const employees: Employee[] = (data ?? []) as Employee[];
+
+  const handleRefresh = async () => {
     try {
-      const list = await employeeApi.getAll();
-      setEmployees(list);
-      if (showSuccess) setModalMessage('Employee list refreshed');
-    } catch { toast.error('Failed to load employees'); }
-    finally { setLoading(false); }
+      await refetch();
+      setModalMessage('Employee list refreshed');
+    } catch {
+      toast.error('Failed to load employees');
+    }
   };
-  useEffect(() => { fetch(); }, []);
 
   const filtered = employees.filter(e => {
     const q = search.toLowerCase();
@@ -54,7 +53,7 @@ export default function EmployeesPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn-ghost" onClick={() => fetch()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button className="btn-ghost" onClick={handleRefresh} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <RefreshCw size={13} /> Refresh
           </button>
           <Link href="/employees/add" style={{ textDecoration: 'none' }}>
@@ -112,7 +111,7 @@ export default function EmployeesPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px', border: '1px solid #ebebeb', borderRadius: '14px' }}>
-          <p style={{ color: '#737373', fontSize: '13px' }}>No results for "<strong style={{ color: '#0a0a0a' }}>{search}</strong>"</p>
+          <p style={{ color: '#737373', fontSize: '13px' }}>No results for &quot;<strong style={{ color: '#0a0a0a' }}>{search}</strong>&quot;</p>
           <button onClick={() => { setSearch(''); setFilter('ALL'); }}
             style={{ marginTop: '10px', background: 'none', border: 'none', color: '#1e2d40', cursor: 'pointer', fontSize: '12px', fontWeight: 500, textDecoration: 'underline', fontFamily: 'var(--font-body)' }}>
             Clear filters
@@ -121,10 +120,7 @@ export default function EmployeesPage() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '12px' }}>
           {filtered.map(emp => (
-            <EmployeeCard key={emp.email} employee={emp}
-              onDeleted={email => setEmployees(p => p.filter(e => e.email !== email))}
-              onUpdated={upd => setEmployees(p => p.map(e => e.email === upd.email ? upd : e))}
-            />
+            <EmployeeCard key={emp.email} employee={emp} />
           ))}
         </div>
       )}

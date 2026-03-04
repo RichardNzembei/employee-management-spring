@@ -47,7 +47,34 @@ SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
 SERVER_PORT=8080
 ```
 
-The server port may be changed here to avoid conflicts. The frontend expects the backend at `http://localhost:8080/api` by default; update `frontend/src/lib/api.ts` if the port differs.
+The server port may be changed here to avoid conflicts. The frontend reads `NEXT_PUBLIC_API_URL` for the backend endpoint, defaulting to `http://localhost:8080/api`. You can export this variable in a `.env.local` file inside `frontend` or set it when starting the dev server. Example:
+
+```
+NEXT_PUBLIC_API_URL=http://localhost:8080/api
+```
+
+The code falls back to the default if the variable is not set.
+
+---
+
+## Backend
+
+The backend is a Spring Boot application. You can build, test and run it with Maven.
+
+### Testing
+
+Automated tests are located in `backend/src/test/java` and include an integration-style
+`EmployeeManagementApplicationTests` class. They use a live PostgreSQL connection and are
+run with Flyway disabled to avoid version mismatches.
+
+```bash
+cd backend
+mvn test          # compile and execute tests
+```
+
+### Linting / formatting
+
+Java code follows standard conventions; a formatter (e.g. IntelliJ defaults) is recommended.
 
 ---
 
@@ -69,6 +96,35 @@ The server port may be changed here to avoid conflicts. The frontend expects the
    ```
 
 The application will auto-create tables (DDL `update`) and listen on the port configured in `.env`.
+
+---
+
+## Frontend
+
+The frontend is a Next.js application using React Query for data fetching.
+
+### Development
+
+```bash
+cd frontend
+npm install          # or yarn
+npm run dev          # start dev server at http://localhost:3000
+```
+
+The `src/hooks/useEmployees.ts` hook centralizes API access; the React Query cache
+is invalidated automatically when employees are added/updated/deleted.
+
+### Linting & Formatting
+
+ESLint is enabled via `.eslintrc.json` (extends `next/core-web-vitals`). Run:
+
+```bash
+cd frontend
+npm run lint -- --fix
+```
+
+A Prettier configuration can be added if desired; the codebase currently strips comments
+and adheres to the existing style.
 
 ---
 
@@ -102,6 +158,14 @@ A simple `Employee` entity with fields:
 - `salary`, `employmentDate`
 
 JPA manages the schema, so no manual migrations are required for development.
+
+---
+
+## Continuous Integration (CI)
+
+A basic GitHub Actions workflow (see `.github/workflows/ci.yml`) builds and tests
+both backend and frontend on every push. It installs Java and Node.js, runs `mvn test`,
+and executes `npm install && npm run lint && npm run build` for the frontend.
 
 ---
 

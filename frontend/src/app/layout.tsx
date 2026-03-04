@@ -1,9 +1,11 @@
+'use client';
 import type { Metadata } from 'next'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import Sidebar from '@/components/Sidebar'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-export const metadata: Metadata = { title: 'EMS — Employee Management' }
+// export const metadata: Metadata = { title: 'EMS — Employee Management' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -22,7 +24,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div style={{ display: 'flex' }}>
           <Sidebar />
           <main className="grid-bg" style={{ marginLeft: '220px', flex: 1, minHeight: '100vh' }}>
-            {children}
+            <QueryClientProvider client={new QueryClient()}>
+              {children}
+            </QueryClientProvider>
           </main>
         </div>
       </body>
